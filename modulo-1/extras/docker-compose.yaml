@@ -62,8 +62,6 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__CORE__LAZY_LOAD_PLUGINS: 'false'
-    # AIRFLOW__LINEAGE__BACKEND: 'datahub_provider.lineage.datahub.DatahubLineageBackend'
-    # AIRFLOW__LINEAGE__DATAHUB_KWARGS: '{ "datahub_conn_id": "datahub_rest_default", "capture_ownership_info": true, "capture_tags_info": true, "graceful_exceptions": false }'
 
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
@@ -72,7 +70,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: 'acryl-datahub-airflow-plugin[plugin-v2] acryl-datahub==0.13.1.2'
+    _PIP_ADDITIONAL_REQUIREMENTS: 'apache-airflow-providers-amazon==8.17.0 apache-airflow-providers-ssh==3.11.0'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -85,8 +83,6 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
-  networks:
-    - datahub_network
 
 services:
   postgres:
@@ -105,8 +101,6 @@ services:
       retries: 5
       start_period: 5s
     restart: always
-    networks:
-      - datahub_network
 
   redis:
     image: redis:latest
@@ -119,8 +113,6 @@ services:
       retries: 50
       start_period: 30s
     restart: always
-    networks:
-      - datahub_network
 
   airflow-webserver:
     <<: *airflow-common
@@ -251,8 +243,6 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      # _PIP_ADDITIONAL_REQUIREMENTS: 'acryl-datahub-airflow-plugin[plugin-v2]'
-      # _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "50000:50000"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
@@ -294,7 +284,3 @@ services:
 
 volumes:
   postgres-db-volume:
-
-networks:
-  datahub_network:
-    # external: true
